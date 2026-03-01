@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Personal Change-Readiness Questionnaire</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0f0f13; --surface: #18181f; --border: #2a2a35;
+  --accent: #e8b86d; --text: #f0ede8; --muted: #888;
+  --red: #ef4444; --green: #22c55e; --blue: #3b82f6;
+}
+body { font-family: 'Jost', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+h1, h2, h3 { font-family: 'Cormorant Garamond', serif; }
+button { font-family: 'Jost', sans-serif; cursor: pointer; }
+input { font-family: 'Jost', sans-serif; }
+
+#progress-bar { position: fixed; top: 0; left: 0; right: 0; height: 3px; background: var(--border); z-index: 100; }
+#progress-fill { height: 100%; background: var(--accent); transition: width 0.3s ease; width: 0%; }
+
+.page { display: none; min-height: 100vh; padding: 60px 20px 80px; }
+.page.active { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+#page-results.active { display: block; }
+
+.wrapper { max-width: 560px; width: 100%; }
+
+/* LANDING */
+.label-tag { font-size: 11px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--accent); margin-bottom: 20px; display: block; }
+.main-title { font-size: clamp(32px, 6vw, 52px); line-height: 1.15; margin-bottom: 16px; }
+.subtitle { color: var(--muted); font-size: 15px; line-height: 1.7; margin-bottom: 36px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 28px; margin-bottom: 16px; }
+.card-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 14px; }
+.input-field {
+  width: 100%; padding: 12px 16px;
+  background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+  color: var(--text); font-size: 14px; outline: none; margin-bottom: 10px;
+  transition: border-color 0.2s;
+}
+.input-field:focus { border-color: var(--accent); }
+.gender-row { display: flex; gap: 8px; }
+.gender-btn {
+  flex: 1; padding: 10px; border-radius: 6px; font-size: 13px; font-weight: 500;
+  background: transparent; color: var(--muted); border: 1px solid var(--border); transition: all 0.15s;
+}
+.gender-btn.active { background: var(--accent); color: #0f0f13; border-color: var(--accent); font-weight: 700; }
+.btn-primary {
+  width: 100%; padding: 16px; background: var(--accent); color: #0f0f13;
+  border: none; border-radius: 8px; font-size: 16px; font-weight: 700; transition: opacity 0.15s;
+}
+.btn-primary:hover { opacity: 0.88; }
+.error-msg { color: var(--red); font-size: 13px; margin-top: 10px; display: none; }
+
+/* FORM */
+.dot-nav { display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 6px; }
+.dot-nav-item { width: 14px; height: 6px; border-radius: 3px; cursor: pointer; background: var(--border); transition: background 0.2s; }
+.dot-nav-item.answered { background: var(--accent); }
+.dot-nav-item.current { background: #555; }
+.q-counter { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+.q-dimension { font-size: 11px; color: var(--muted); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 24px; text-align: center; }
+.q-text { font-size: clamp(22px, 4vw, 32px); font-weight: 600; line-height: 1.4; margin-bottom: 48px; text-align: center; }
+.scale-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 12px; padding: 0 4px; }
+.rating-row { display: flex; justify-content: center; gap: 10px; margin-bottom: 40px; flex-wrap: wrap; }
+.rating-btn {
+  width: 52px; height: 52px; border-radius: 50%;
+  border: 2px solid var(--border); background: var(--surface);
+  color: var(--muted); font-size: 16px; font-weight: 700; transition: all 0.15s;
+}
+.rating-btn:hover { border-color: var(--accent); color: var(--accent); transform: scale(1.08); }
+.rating-btn.selected { background: var(--accent); border-color: var(--accent); color: #0f0f13; transform: scale(1.15); }
+.nav-row { display: flex; justify-content: center; gap: 12px; }
+.btn-nav {
+  padding: 10px 24px; border-radius: 6px; font-size: 13px;
+  background: transparent; border: 1px solid var(--border); color: var(--muted); transition: all 0.15s;
+}
+.btn-nav:hover { border-color: #555; color: var(--text); }
+.btn-nav:disabled { opacity: 0.3; cursor: default; }
+.btn-submit { padding: 12px 32px; background: var(--accent); color: #0f0f13; border: none; border-radius: 6px; font-size: 14px; font-weight: 700; }
+.remaining-msg { text-align: center; font-size: 12px; color: #555; margin-top: 14px; }
+
+/* RESULTS */
+.results-wrapper { max-width: 700px; margin: 0 auto; padding: 40px 20px 80px; }
+.overall-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 32px; margin-bottom: 24px; text-align: center; }
+.overall-number { font-size: 72px; font-weight: 700; line-height: 1; font-family: 'Cormorant Garamond', serif; }
+.overall-label { color: var(--muted); font-size: 13px; margin-top: 4px; }
+.overall-band { font-size: 18px; font-weight: 600; margin-top: 10px; }
+.overall-desc { font-size: 13px; color: #aaa; max-width: 440px; margin: 10px auto 0; line-height: 1.6; }
+.dim-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; margin-bottom: 24px; }
+.dim-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; }
+.dim-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+.dim-name { font-weight: 600; font-size: 15px; }
+.dim-score { font-size: 26px; font-weight: 700; line-height: 1; font-family: 'Cormorant Garamond', serif; }
+.dim-score span { font-size: 12px; color: var(--muted); font-family: 'Jost', sans-serif; }
+.bar-track { height: 6px; background: var(--border); border-radius: 3px; margin: 10px 0; }
+.bar-fill { height: 100%; border-radius: 3px; transition: width 1s ease; }
+.band-pill { font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 600; letter-spacing: 0.05em; }
+.dim-feedback { font-size: 12px; color: #aaa; line-height: 1.6; margin-top: 10px; }
+.legend-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 24px; }
+.legend-row { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-top: 1px solid var(--border); flex-wrap: wrap; }
+
+@media (max-width: 560px) {
+  .rating-row { gap: 6px; }
+  .rating-btn { width: 44px; height: 44px; font-size: 14px; }
+  .dim-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- Hidden Netlify form — Netlify detects this on deploy and activates form collection -->
+<form name="crq-responses" netlify netlify-honeypot="bot-field" hidden>
+  <input type="hidden" name="name" />
+  <input type="hidden" name="age" />
+  <input type="hidden" name="gender" />
+  <input type="hidden" name="passion" />
+  <input type="hidden" name="resourcefulness" />
+  <input type="hidden" name="optimism" />
+  <input type="hidden" name="adventurousness" />
+  <input type="hidden" name="adaptability" />
+  <input type="hidden" name="confidence" />
+  <input type="hidden" name="tolerance" />
+  <input type="hidden" name="total" />
+  <input type="hidden" name="overall_band" />
+  <input type="hidden" name="timestamp" />
+</form>
+
+<div id="progress-bar"><div id="progress-fill"></div></div>
+
+<!-- LANDING -->
+<div id="page-landing" class="page active">
+  <div class="wrapper" style="text-align:center">
+    <span class="label-tag">Self-Assessment Tool</span>
+    <h1 class="main-title">Personal Change-Readiness<br>Questionnaire</h1>
+    <p class="subtitle">35 statements · ~10 minutes · Personalised results across 7 dimensions of change-readiness</p>
+
+    <div class="card" style="text-align:left">
+      <div class="card-label">Tell us about yourself</div>
+      <input class="input-field" id="inp-name" type="text" placeholder="Full Name *" />
+      <input class="input-field" id="inp-age" type="number" placeholder="Age *" min="10" max="100" />
+      <div class="gender-row">
+        <button class="gender-btn" onclick="setGender('Male')">Male</button>
+        <button class="gender-btn" onclick="setGender('Female')">Female</button>
+        <button class="gender-btn" onclick="setGender('Other')">Other</button>
+      </div>
+      <div id="profile-error" class="error-msg"></div>
+    </div>
+
+    <button class="btn-primary" onclick="startForm()">Begin Assessment →</button>
+  </div>
+</div>
+
+<!-- FORM -->
+<div id="page-form" class="page">
+  <div class="wrapper">
+    <div class="q-counter">
+      <span id="q-num-label">Question 1 of 35</span>
+      <span id="q-pct-label" style="color:var(--accent)">0% complete</span>
+    </div>
+    <div class="dot-nav" id="dot-nav"></div>
+    <br>
+    <div class="q-dimension" id="q-dimension"></div>
+    <h2 class="q-text" id="q-text"></h2>
+    <div class="scale-labels"><span>Less like me</span><span>More like me</span></div>
+    <div class="rating-row" id="rating-row"></div>
+    <div class="nav-row">
+      <button class="btn-nav" id="btn-back" onclick="prevQ()">← Back</button>
+      <button class="btn-nav" id="btn-next" onclick="nextQ()">Next →</button>
+      <button class="btn-submit" id="btn-submit" onclick="submitForm()" style="display:none">See My Results →</button>
+    </div>
+    <p class="remaining-msg" id="remaining-msg"></p>
+  </div>
+</div>
+
+<!-- RESULTS -->
+<div id="page-results" class="page">
+  <div class="results-wrapper">
+    <div style="text-align:center; margin-bottom:40px">
+      <span class="label-tag">Your Results</span>
+      <h2 id="result-title" style="font-size:clamp(24px,5vw,36px); margin-bottom:6px"></h2>
+      <p id="result-meta" style="color:var(--muted); font-size:14px"></p>
+    </div>
+    <div class="overall-card">
+      <div class="overall-number" id="overall-number"></div>
+      <div class="overall-label">out of 210</div>
+      <div class="overall-band" id="overall-band"></div>
+      <p class="overall-desc" id="overall-desc"></p>
+    </div>
+    <div class="dim-grid" id="dim-grid"></div>
+    <div class="legend-card">
+      <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.1em; color:var(--muted); margin-bottom:8px">Score Guide (per dimension, max 30)</div>
+      <div class="legend-row">
+        <div style="width:10px;height:10px;border-radius:50%;background:var(--red);flex-shrink:0"></div>
+        <div style="font-size:12px;color:var(--muted);width:60px">0 – 21</div>
+        <div style="font-weight:600;font-size:13px;color:var(--red);width:140px">Inadequate Supply</div>
+        <div style="font-size:12px;color:#666">Area needing development</div>
+      </div>
+      <div class="legend-row">
+        <div style="width:10px;height:10px;border-radius:50%;background:var(--green);flex-shrink:0"></div>
+        <div style="font-size:12px;color:var(--muted);width:60px">22 – 26</div>
+        <div style="font-weight:600;font-size:13px;color:var(--green);width:140px">Adequate Supply</div>
+        <div style="font-size:12px;color:#666">Healthy balance</div>
+      </div>
+      <div class="legend-row">
+        <div style="width:10px;height:10px;border-radius:50%;background:var(--blue);flex-shrink:0"></div>
+        <div style="font-size:12px;color:var(--muted);width:60px">27 – 30</div>
+        <div style="font-weight:600;font-size:13px;color:var(--blue);width:140px">Over Supply</div>
+        <div style="font-size:12px;color:#666">Very high — can tip into negative traits</div>
+      </div>
+    </div>
+    <button onclick="retake()" style="background:transparent;border:1px solid var(--border);color:var(--muted);padding:10px 24px;border-radius:6px;font-size:13px">&larr; Take Again</button>
+
+    <!-- DEBUG TABLE -->
+    <div style="margin-top:40px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:var(--accent);margin-bottom:16px">Score Breakdown (Debug)</div>
+      <div style="overflow-x:auto">
+        <table id="debug-table" style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead>
+            <tr style="border-bottom:2px solid var(--border)">
+              <th style="text-align:left;padding:8px 10px;color:var(--muted);font-weight:500">Q#</th>
+              <th style="text-align:left;padding:8px 10px;color:var(--muted);font-weight:500">Dimension</th>
+              <th style="text-align:center;padding:8px 10px;color:var(--muted);font-weight:500">Raw Answer</th>
+              <th style="text-align:center;padding:8px 10px;color:var(--muted);font-weight:500">Reversed?</th>
+              <th style="text-align:center;padding:8px 10px;color:var(--muted);font-weight:500">Score Used</th>
+            </tr>
+          </thead>
+          <tbody id="debug-tbody"></tbody>
+          <tfoot id="debug-tfoot"></tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const QUESTIONS = [
+  {n:1, text:"I prefer to be in situations I am familiar with"},
+  {n:2, text:"I rarely doubt myself"},
+  {n:3, text:"I'm likely to change plans once they are set"},
+  {n:4, text:"When I wake up in the morning I am full of energy"},
+  {n:5, text:"I believe in not having high hopes"},
+  {n:6, text:"If something's broken, I'll find a way to fix it"},
+  {n:7, text:"I get impatient when there are no clear answers"},
+  {n:8, text:"I'm inclined to establish routines and stay with them"},
+  {n:9, text:"I can make any situation work for me"},
+  {n:10,text:"When something important doesn't work out, I quickly adjust"},
+  {n:11,text:"I have a hard time relaxing and doing nothing"},
+  {n:12,text:"If something can go wrong, it will"},
+  {n:13,text:"When I get stuck, I'm inclined to improvise solutions"},
+  {n:14,text:"I get frustrated when I don't understand a situation"},
+  {n:15,text:"I prefer work that is familiar and within my comfort zone"},
+  {n:16,text:"I can handle anything that comes my way"},
+  {n:17,text:"Even if I have made up my mind, I can easily change it"},
+  {n:18,text:"I push myself to the maximum"},
+  {n:19,text:"My tendency is to focus on what can go wrong"},
+  {n:20,text:"When people need solutions, they come to me"},
+  {n:21,text:"When an issue is unclear, I want to clarify right away"},
+  {n:22,text:"It is better to stay with what I know than to attempt something new"},
+  {n:23,text:"I focus on my strengths, not my weaknesses"},
+  {n:24,text:"I do not find it hard to give up on something even if it's not working out"},
+  {n:25,text:"I want to keep doing something and I am full of energy"},
+  {n:26,text:"Things rarely work out the way I want them to"},
+  {n:27,text:"My strength is to find ways around obstacles"},
+  {n:28,text:"I can't stand to leave things undone"},
+  {n:29,text:"I prefer to take the known road than the unknown road"},
+  {n:30,text:"My faith in my abilities is unshakable"},
+  {n:31,text:"When I am part of a group I do what is expected of me by the group"},
+  {n:32,text:"I'm a vigorous and passionate person"},
+  {n:33,text:"I'm more likely to see problems than opportunities"},
+  {n:34,text:"I look in unusual places to find solutions"},
+  {n:35,text:"I don't perform well when there are vague expectations and goals"},
+];
+
+const DIMENSIONS = [
+  {key:"P", name:"Passion",                 icon:"🔥", method:"sum",     qs:[{n:4},{n:11},{n:18},{n:25},{n:32}]},
+  {key:"R", name:"Resourcefulness",         icon:"🛠️", method:"sum",     qs:[{n:6},{n:13},{n:20},{n:27},{n:34}]},
+  {key:"O", name:"Optimism",                icon:"☀️", method:"35minus", qs:[{n:5},{n:12},{n:19},{n:26},{n:33}]},
+  {key:"A", name:"Adventurousness",         icon:"🧭", method:"35minus", qs:[{n:1},{n:8},{n:15},{n:22},{n:29}]},
+  {key:"AD",name:"Adaptability",            icon:"🔄", method:"sum",     qs:[{n:3},{n:10},{n:17},{n:24},{n:31}]},
+  {key:"C", name:"Confidence",              icon:"💪", method:"sum",     qs:[{n:2},{n:9},{n:16},{n:23},{n:30}]},
+  {key:"T", name:"Tolerance for Ambiguity", icon:"🌫️", method:"35minus", qs:[{n:7},{n:14},{n:21},{n:28},{n:35}]},
+];
+
+const FEEDBACK = {
+  P:  {
+    over:     "Your passion can tip into restlessness or burnout — build in deliberate rest and recovery.",
+    adequate: "You bring great energy and drive. Others likely find your enthusiasm infectious.",
+    low:      "Building personal motivation can help you push through challenging transitions with more resilience."
+  },
+  R:  {
+    over:     "Hyper-resourcefulness may lead to going it alone too often — learn to trust and leverage others.",
+    adequate: "You're a strong problem-solver who finds ways forward when the path isn't clear.",
+    low:      "Practising creative problem-solving in low-stakes situations will steadily build this capability."
+  },
+  O:  {
+    over:     "Excessive optimism can cause you to underestimate real risks — balance positive thinking with grounded realism.",
+    adequate: "You maintain a healthy, positive outlook even when things get difficult.",
+    low:      "Consciously reframing negative thought patterns can significantly improve how you experience change."
+  },
+  A:  {
+    over:     "Constant novelty-seeking can create instability for you and those around you — some consistency is genuinely valuable.",
+    adequate: "You balance comfort and new experiences well, taking calculated risks when needed.",
+    low:      "Start with small, safe experiments outside your comfort zone to gradually build confidence with the unfamiliar."
+  },
+  AD: {
+    over:     "Too much flexibility can make you seem inconsistent or unreliable — structure and follow-through matter too.",
+    adequate: "You adjust well when situations change without losing your sense of direction.",
+    low:      "Practise consciously releasing attachment to the original plan when circumstances genuinely shift."
+  },
+  C:  {
+    over:     "Overconfidence can blind you to important feedback — stay genuinely open to others' perspectives and criticism.",
+    adequate: "You believe in yourself without tipping into arrogance — a real asset in change situations.",
+    low:      "Reflecting on past successes and building evidence of your capabilities will strengthen your self-belief over time."
+  },
+  T:  {
+    over:     "Extreme ambiguity tolerance may mean you stay comfortable in situations where clarity is actually needed.",
+    adequate: "You handle unclear situations with composure, making you effective in complex environments.",
+    low:      "Practise sitting with uncertainty by breaking ambiguous situations into smaller, more manageable pieces."
+  },
+};
+
+// ── State ──
+let profile = {name:"", age:"", gender:""};
+let answers = {};
+let currentQ = 0;
+let selectedGender = "";
+
+// ── Helpers ──
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function setGender(g) {
+  selectedGender = g;
+  document.querySelectorAll('.gender-btn').forEach(b => b.classList.toggle('active', b.textContent === g));
+}
+
+function getBand(score) {
+  if (score >= 27) return {label:"Over Supply",      color:"var(--blue)",  pillBg:"#1e3a8a", pillColor:"#93c5fd"};
+  if (score >= 22) return {label:"Adequate Supply",  color:"var(--green)", pillBg:"#14532d", pillColor:"#86efac"};
+  return              {label:"Inadequate Supply", color:"var(--red)",   pillBg:"#7f1d1d", pillColor:"#fca5a5"};
+}
+
+function calcScores(ans) {
+  return DIMENSIONS.map(dim => {
+    const subTotal = dim.qs.reduce((s, q) => s + (q.rev ? 7 - ans[q.n] : ans[q.n]), 0);
+    const score = dim.method === "35minus" ? 35 - subTotal : subTotal;
+    return { ...dim, subTotal, score };
+  });
+}
+
+function getDimForQ(n) {
+  return DIMENSIONS.find(d => d.qs.some(q => q.n === n));
+}
+
+// ── Landing ──
+function startForm() {
+  const name = document.getElementById('inp-name').value.trim();
+  const age  = document.getElementById('inp-age').value;
+  const err  = document.getElementById('profile-error');
+
+  if (!name)                           { err.textContent="Please enter your name.";   err.style.display='block'; return; }
+  if (!age || age < 10 || age > 100)  { err.textContent="Please enter a valid age."; err.style.display='block'; return; }
+  if (!selectedGender)                 { err.textContent="Please select your gender.";err.style.display='block'; return; }
+
+  err.style.display = 'none';
+  profile = { name, age, gender: selectedGender };
+  answers = {};
+  currentQ = 0;
+  buildDotNav();
+  renderQuestion();
+  showPage('form');
+}
+
+// ── Form ──
+function buildDotNav() {
+  document.getElementById('dot-nav').innerHTML = QUESTIONS.map((q, i) =>
+    `<div class="dot-nav-item" id="dot-${i}" onclick="goToQ(${i})"></div>`
+  ).join('');
+}
+
+function updateDotNav() {
+  QUESTIONS.forEach((q, i) => {
+    const el = document.getElementById('dot-' + i);
+    el.className = 'dot-nav-item' + (answers[q.n] ? ' answered' : '') + (i === currentQ ? ' current' : '');
+  });
+}
+
+function renderQuestion() {
+  const q        = QUESTIONS[currentQ];
+  const dim      = getDimForQ(q.n);
+  const answered = answers[q.n];
+  const pct      = Math.round(Object.keys(answers).length / QUESTIONS.length * 100);
+
+  document.getElementById('q-num-label').textContent   = `Question ${currentQ + 1} of ${QUESTIONS.length}`;
+  document.getElementById('q-pct-label').textContent   = `${pct}% complete`;
+  document.getElementById('q-dimension').textContent   = dim ? dim.name : '';
+  document.getElementById('q-text').textContent        = `"${q.text}"`;
+  document.getElementById('progress-fill').style.width = pct + '%';
+
+  document.getElementById('rating-row').innerHTML = [1,2,3,4,5,6].map(v =>
+    `<button class="rating-btn${answered === v ? ' selected' : ''}" onclick="selectAnswer(${q.n}, ${v})">${v}</button>`
+  ).join('');
+
+  const isLast = currentQ === QUESTIONS.length - 1;
+  document.getElementById('btn-back').style.display   = currentQ === 0 ? 'none' : '';
+  document.getElementById('btn-next').style.display   = isLast ? 'none' : '';
+  document.getElementById('btn-submit').style.display = isLast ? '' : 'none';
+  document.getElementById('btn-next').disabled        = !answered;
+
+  const remaining = QUESTIONS.length - Object.keys(answers).length;
+  document.getElementById('remaining-msg').textContent = remaining > 0
+    ? `${remaining} question${remaining > 1 ? 's' : ''} remaining` : '';
+
+  updateDotNav();
+}
+
+function selectAnswer(n, val) {
+  answers[n] = val;
+  renderQuestion();
+  if (currentQ < QUESTIONS.length - 1) {
+    setTimeout(() => { currentQ++; renderQuestion(); }, 280);
+  }
+}
+
+function prevQ() { if (currentQ > 0)                    { currentQ--; renderQuestion(); } }
+function nextQ() { if (currentQ < QUESTIONS.length - 1) { currentQ++; renderQuestion(); } }
+function goToQ(i) { currentQ = i; renderQuestion(); }
+
+async function submitForm() {
+  const missing = QUESTIONS.filter(q => !answers[q.n]);
+  if (missing.length > 0) {
+    alert(`Please answer all questions. ${missing.length} remaining.\nClick any grey dot at the top to jump to unanswered questions.`);
+    return;
+  }
+
+  const btn = document.getElementById('btn-submit');
+  btn.textContent = 'Saving...';
+  btn.disabled = true;
+
+  const dimScores = calcScores(answers);
+  const total     = dimScores.reduce((s, d) => s + d.score, 0);
+  const band      = total >= 189 ? 'Over Supply' : total >= 154 ? 'Adequate Supply' : 'Inadequate Supply';
+
+  // Submit to Netlify Forms
+  const formData = new FormData();
+  formData.append('form-name',        'crq-responses');
+  formData.append('name',             profile.name);
+  formData.append('age',              profile.age);
+  formData.append('gender',           profile.gender);
+  formData.append('passion',          dimScores.find(d=>d.key==='P').score);
+  formData.append('resourcefulness',  dimScores.find(d=>d.key==='R').score);
+  formData.append('optimism',         dimScores.find(d=>d.key==='O').score);
+  formData.append('adventurousness',  dimScores.find(d=>d.key==='A').score);
+  formData.append('adaptability',     dimScores.find(d=>d.key==='AD').score);
+  formData.append('confidence',       dimScores.find(d=>d.key==='C').score);
+  formData.append('tolerance',        dimScores.find(d=>d.key==='T').score);
+  formData.append('total',            total);
+  formData.append('overall_band',     band);
+  formData.append('timestamp',        new Date().toLocaleString('en-IN'));
+
+  try {
+    await fetch('/', { method: 'POST', body: formData });
+  } catch(e) { console.warn('Netlify form save failed:', e); }
+
+  renderResults(dimScores, total);
+  showPage('results');
+}
+
+// ── Results ──
+function renderResults(dimScores, total) {
+  document.getElementById('result-title').textContent = `${profile.name}'s Change-Readiness Profile`;
+  document.getElementById('result-meta').textContent  =
+    `${profile.age} yrs · ${profile.gender} · ${new Date().toLocaleDateString('en-IN', {day:'numeric', month:'long', year:'numeric'})}`;
+
+  const overallColor = total >= 189 ? 'var(--blue)' : total >= 154 ? 'var(--green)' : 'var(--red)';
+  const overallBand  = total >= 189 ? 'Over Supply' : total >= 154 ? 'Adequate Supply' : 'Inadequate Supply';
+  const overallDesc  = total >= 189
+    ? 'You score very high across dimensions. Be mindful — over-supply in certain areas can tip into counterproductive patterns. See the individual breakdowns below.'
+    : total >= 154
+    ? 'You have a healthy overall readiness for change. Review the individual dimensions below to identify where you can grow further.'
+    : 'There are several dimensions where focused development will significantly improve your ability to navigate and lead change.';
+
+  document.getElementById('overall-number').textContent = total;
+  document.getElementById('overall-number').style.color = overallColor;
+  document.getElementById('overall-band').textContent   = overallBand;
+  document.getElementById('overall-band').style.color   = overallColor;
+  document.getElementById('overall-desc').textContent   = overallDesc;
+
+  renderDebugTable(dimScores, answers);
+  document.getElementById('dim-grid').innerHTML = dimScores.map(d => {
+    const b      = getBand(d.score);
+    const fk     = d.score >= 27 ? 'over' : d.score >= 22 ? 'adequate' : 'low';
+    const pct    = (d.score / 30) * 100;
+    const barClr = d.score >= 27 ? 'var(--blue)' : d.score >= 22 ? 'var(--green)' : 'var(--red)';
+    return `
+      <div class="dim-card">
+        <div class="dim-header">
+          <div class="dim-name">${d.icon} ${d.name}</div>
+          <div class="dim-score" style="color:${b.color}">${d.score}<span>/30</span></div>
+        </div>
+        <div class="bar-track"><div class="bar-fill" style="width:${pct}%; background:${barClr}"></div></div>
+        <div style="margin-top:8px">
+          <span class="band-pill" style="background:${b.pillBg}; color:${b.pillColor}">${b.label}</span>
+        </div>
+        <p class="dim-feedback">${FEEDBACK[d.key][fk]}</p>
+      </div>`;
+  }).join('');
+}
+
+function retake() {
+  answers = {};
+  profile = { name:"", age:"", gender:"" };
+  selectedGender = "";
+  document.getElementById('inp-name').value = '';
+  document.getElementById('inp-age').value  = '';
+  document.querySelectorAll('.gender-btn').forEach(b => b.classList.remove('active'));
+  showPage('landing');
+}
+
+// ── Debug Table ──
+function renderDebugTable(dimScores, ans) {
+  const tbody = document.getElementById('debug-tbody');
+  const tfoot = document.getElementById('debug-tfoot');
+  let rows = '';
+
+  dimScores.forEach(dim => {
+    dim.qs.forEach((q, qi) => {
+      const raw  = ans[q.n];
+      const used = q.rev ? 7 - raw : raw;
+      const bg   = qi % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent';
+      rows += `<tr style="border-bottom:1px solid var(--border);background:${bg}">
+        <td style="padding:7px 10px;color:var(--muted)">${q.n}</td>
+        <td style="padding:7px 10px">${dim.icon} ${dim.name}</td>
+        <td style="padding:7px 10px;text-align:center;font-weight:600">${raw}</td>
+        <td style="padding:7px 10px;text-align:center">${q.rev ? '<span style="color:#f87171">Yes (7-' + raw + '='+used+')</span>' : '<span style="color:#888">No</span>'}</td>
+        <td style="padding:7px 10px;text-align:center;font-weight:700;color:var(--accent)">${used}</td>
+      </tr>`;
+    });
+
+    const method = dim.method === "35minus"
+      ? `<span style="color:#60a5fa">35 - ${dim.subTotal} = ${dim.score}</span>`
+      : `<span style="color:#4ade80">Sum = ${dim.score}</span>`;
+    rows += `<tr style="border-bottom:2px solid var(--border);background:rgba(232,184,109,0.06)">
+      <td colspan="2" style="padding:7px 10px;font-weight:600;color:var(--accent)">${dim.icon} ${dim.name}</td>
+      <td style="padding:7px 10px;text-align:center;color:var(--muted)">Sub: ${dim.subTotal}</td>
+      <td style="padding:7px 10px;text-align:center;font-size:11px">${method}</td>
+      <td style="padding:7px 10px;text-align:center;font-weight:700;font-size:15px;color:var(--accent)">${dim.score}</td>
+    </tr>`;
+  });
+
+  tbody.innerHTML = rows;
+
+  const total = dimScores.reduce((s,d) => s+d.score, 0);
+  tfoot.innerHTML = `<tr style="background:rgba(232,184,109,0.1)">
+    <td colspan="4" style="padding:10px;font-weight:700;font-size:14px">OVERALL TOTAL</td>
+    <td style="padding:10px;text-align:center;font-weight:700;font-size:18px;color:var(--accent)">${total}</td>
+  </tr>`;
+}
+
+</script>
+</body>
+</html>
